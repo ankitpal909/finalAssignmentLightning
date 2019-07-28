@@ -1,0 +1,57 @@
+({
+    //initializer function ..
+    doInitAction : function(component, event, helper) {
+        var pageReference = {
+            type: 'custom__objectPage',
+            attributes: {
+                objectApiName: 'Mix__c',
+                actionName: 'list'
+            },
+            state: {
+                filterName: "Recent"
+            }
+        };
+        var action = component.get("c.getMixRecord");
+        action.setParams({
+            "mixRecordId" : component.get("v.recordId")
+        });
+        action.setCallback(this, function(response){
+            var state = response.getState();
+            if(state=="SUCCESS"){
+                component.set("v.mixRecord", response.getReturnValue());
+            }
+        });
+        $A.enqueueAction(action);
+    },
+    
+    //fucntion for event handling ..
+    componentEventFired : function(component, event, helper) {
+        var componentEventValue = event.getParam("selectedSongsList");
+        component.set("v.selectedSongsInMixBuilderList", componentEventValue);
+    },
+    
+    //cancel function ..
+    cancel : function(component, event, helper){
+        var idNavigationValue = component.find("idNavigation");
+        // Uses the pageReference definition in the init handler
+        var pageReferenceValue = component.get("v.pageReference");
+        //sevent.preventDefault();
+        idNavigationValue.navigate(pageReferenceValue);
+    },
+    
+    //save function ..
+    save : function(component,event,helper){
+        var selectedSongsInMixBuilderListValues = component.get("v.selectedSongsInMixBuilderList");
+        var selectedSongsInMixBuilderListValuesString = JSON.stringify(selectedSongsInMixBuilderListValues);
+        var actions = component.get("c.saving");
+        actions.setParams({
+            "songsList" : selectedSongsInMixBuilderListValuesString,
+            "mixRecord" : component.get("v.mixRecord")    
+        });
+        actions.setCallback(this, function(response){
+            var trackCountErrorValue = response.getReturnValue;
+            component.set("v.trackCountError", trackCountErrorValue);
+        });
+        $A.enqueueAction(actions);
+    },
+})
